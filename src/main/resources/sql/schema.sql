@@ -22,6 +22,27 @@ create table ingredient
 alter table dish
     add column if not exists price numeric(10, 2);
 
+alter table dish
+    rename column price to selling_price;
+
+alter table ingredient
+    drop column if exists id_dish;
 
 alter table ingredient
     add column if not exists required_quantity numeric(10, 2);
+
+alter table ingredient
+    drop column if exists required_quantity;
+
+create type unit as enum ('PCS', 'KG', 'L');
+
+create table if not exists dish_ingredient
+(
+    id                serial primary key,
+    id_ingredient     int,
+    id_dish           int,
+    required_quantity numeric(10, 2),
+    unit              unit,
+    foreign key (id_ingredient) references ingredient (id),
+    foreign key (id_dish) references dish (id)
+);
