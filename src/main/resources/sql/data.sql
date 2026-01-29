@@ -43,3 +43,31 @@ values (1, 1, 1, 0.2, 'KG'),
        (3, 2, 3, 1.0, 'KG'),
        (4, 4, 4, 0.3, 'KG'),
        (5, 4, 5, 0.2, 'KG');
+-- SQL Migration Script for Payment Status and Sale Features
+
+-- Step 1: Add payment_status column to order table
+ALTER TABLE "order"
+    ADD COLUMN payment_status VARCHAR(10) NOT NULL DEFAULT 'UNPAID';
+
+-- Add constraint to ensure only valid values
+ALTER TABLE "order"
+    ADD CONSTRAINT check_payment_status
+        CHECK (payment_status IN ('UNPAID', 'PAID'));
+
+-- Step 2: Create sale table
+CREATE TABLE sale (
+                      id SERIAL PRIMARY KEY,
+                      sale_datetime TIMESTAMP NOT NULL,
+                      order_id INTEGER NOT NULL UNIQUE,
+                      CONSTRAINT fk_sale_order FOREIGN KEY (order_id)
+                          REFERENCES "order"(id) ON DELETE CASCADE
+);
+
+-- Add index on order_id for performance
+CREATE INDEX idx_sale_order_id ON sale(order_id);
+
+-- Optional: Add comments for documentation
+COMMENT ON TABLE sale IS 'Table storing sales associated with paid orders';
+COMMENT ON COLUMN sale.sale_datetime IS 'Date and time when the sale was created';
+COMMENT ON COLUMN sale.order_id IS 'Foreign key to the order table (one-to-one relationship)';
+COMMENT ON COLUMN "order".payment_status IS 'Payment status of the order: UNPAID or PAID';
